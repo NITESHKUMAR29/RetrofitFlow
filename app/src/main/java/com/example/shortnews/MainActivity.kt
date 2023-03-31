@@ -1,5 +1,7 @@
 package com.example.shortnews
 
+import android.content.Intent
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
@@ -13,6 +15,9 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
@@ -21,14 +26,124 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding=DataBindingUtil.setContentView(this,R.layout.activity_main)
+        with(binding){
+            trendingNews("All")
+            all.setTextColor(Color.WHITE)
+            all.setBackgroundResource(R.drawable.trending_background)
+            all.setOnClickListener {
+                all.setTextColor(Color.WHITE)
+                sports.setTextColor(Color.BLACK)
+                movie.setTextColor(Color.BLACK)
+                india.setTextColor(Color.BLACK)
+                politics.setTextColor(Color.BLACK)
+                ipl.setTextColor(Color.BLACK)
+                trendingNews(all.text.toString())
+                all.setBackgroundResource(R.drawable.trending_background)
+                sports.setBackgroundResource(R.drawable.search_main)
+                politics.setBackgroundResource(R.drawable.search_main)
+                movie.setBackgroundResource(R.drawable.search_main)
+                india.setBackgroundResource(R.drawable.search_main)
+                ipl.setBackgroundResource(R.drawable.search_main)
+            }
+            sports.setOnClickListener {
+                all.setTextColor(Color.BLACK)
+                movie.setTextColor(Color.BLACK)
+                india.setTextColor(Color.BLACK)
+                politics.setTextColor(Color.BLACK)
+                ipl.setTextColor(Color.BLACK)
+                sports.setTextColor(Color.WHITE)
+                trendingNews(sports.text.toString())
+                sports.setBackgroundResource(R.drawable.trending_background)
+                all.setBackgroundResource(R.drawable.search_main)
+                politics.setBackgroundResource(R.drawable.search_main)
+                movie.setBackgroundResource(R.drawable.search_main)
+                india.setBackgroundResource(R.drawable.search_main)
+                ipl.setBackgroundResource(R.drawable.search_main)
+            }
+
+            politics.setOnClickListener {
+                all.setTextColor(Color.BLACK)
+                sports.setTextColor(Color.BLACK)
+                movie.setTextColor(Color.BLACK)
+                india.setTextColor(Color.BLACK)
+                ipl.setTextColor(Color.BLACK)
+                politics.setTextColor(Color.WHITE)
+                trendingNews(politics.text.toString())
+                politics.setBackgroundResource(R.drawable.trending_background)
+                sports.setBackgroundResource(R.drawable.search_main)
+                all.setBackgroundResource(R.drawable.search_main)
+                movie.setBackgroundResource(R.drawable.search_main)
+                india.setBackgroundResource(R.drawable.search_main)
+                ipl.setBackgroundResource(R.drawable.search_main)
+            }
+            movie.setOnClickListener {
+                all.setTextColor(Color.BLACK)
+                sports.setTextColor(Color.BLACK)
+                india.setTextColor(Color.BLACK)
+                politics.setTextColor(Color.BLACK)
+                ipl.setTextColor(Color.BLACK)
+                movie.setTextColor(Color.WHITE)
+                trendingNews(movie.text.toString())
+                movie.setBackgroundResource(R.drawable.trending_background)
+                sports.setBackgroundResource(R.drawable.search_main)
+                politics.setBackgroundResource(R.drawable.search_main)
+                all.setBackgroundResource(R.drawable.search_main)
+                india.setBackgroundResource(R.drawable.search_main)
+                ipl.setBackgroundResource(R.drawable.search_main)
+            }
+            india.setOnClickListener {
+                all.setTextColor(Color.BLACK)
+                sports.setTextColor(Color.BLACK)
+                movie.setTextColor(Color.BLACK)
+                politics.setTextColor(Color.BLACK)
+                ipl.setTextColor(Color.BLACK)
+               india.setTextColor(Color.WHITE)
+                trendingNews(india.text.toString())
+                india.setBackgroundResource(R.drawable.trending_background)
+                sports.setBackgroundResource(R.drawable.search_main)
+                politics.setBackgroundResource(R.drawable.search_main)
+                movie.setBackgroundResource(R.drawable.search_main)
+                all.setBackgroundResource(R.drawable.search_main)
+                ipl.setBackgroundResource(R.drawable.search_main)
+            }
+            ipl.setOnClickListener {
+                all.setTextColor(Color.BLACK)
+                sports.setTextColor(Color.BLACK)
+                movie.setTextColor(Color.BLACK)
+                india.setTextColor(Color.BLACK)
+                politics.setTextColor(Color.BLACK)
+                ipl.setTextColor(Color.WHITE)
+                trendingNews(ipl.text.toString())
+                ipl.setBackgroundResource(R.drawable.trending_background)
+                sports.setBackgroundResource(R.drawable.search_main)
+                politics.setBackgroundResource(R.drawable.search_main)
+                movie.setBackgroundResource(R.drawable.search_main)
+                india.setBackgroundResource(R.drawable.search_main)
+                all.setBackgroundResource(R.drawable.search_main)
+            }
+
+            search.setOnClickListener{
+                val intent= Intent(this@MainActivity,SearchActivity::class.java)
+                startActivity(intent)
+
+            }
+        }
+    }
+    private fun trendingNews(searchType:String) {
         newslist1=ArrayList()
         val retrofit= Retrofit.Builder().baseUrl("https://newsapi.org/").addConverterFactory(
             GsonConverterFactory.create()).build()
         val getApi=retrofit.create(NewsApi::class.java)
-        getApi.getNews("bitcoin","5bc8f27a8cd74ccbbf7a5d678cb7b9cd").enqueue(object : Callback<News?> {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, -1)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val previousDay = dateFormat.format(calendar.time)
+
+        getApi.getNews(searchType, previousDay,"5bc8f27a8cd74ccbbf7a5d678cb7b9cd").enqueue(object :
+            Callback<News?> {
             override fun onResponse(call: Call<News?>, response: Response<News?>) {
                 newslist1= response.body()?.articles !!
-                adapter= MyAdapter(this@MainActivity,newslist1)
+                adapter= MyAdapter(this@MainActivity,this@MainActivity,newslist1)
                 binding.recyclerView.adapter=adapter
                 binding.recyclerView.layoutManager= LinearLayoutManager(this@MainActivity
                 )
@@ -39,6 +154,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-
     }
+
 }
