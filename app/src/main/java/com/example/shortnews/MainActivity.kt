@@ -6,14 +6,16 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.shortnews.application.MyApplication
 import com.example.shortnews.databinding.ActivityMainBinding
 import com.example.shortnews.models.Article
 import com.example.shortnews.models.News
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
+import com.example.shortnews.repository.Repository
+import com.example.shortnews.viewModels.MyViewModel
+import com.example.shortnews.viewModels.MyViewModelFactory
+import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.*
@@ -22,11 +24,19 @@ import kotlin.collections.ArrayList
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     lateinit var adapter: MyAdapter
-    lateinit var newslist1:List<Article>
+    lateinit var newslist1: List<Article>
+    lateinit var viewModel: MyViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding=DataBindingUtil.setContentView(this,R.layout.activity_main)
-        with(binding){
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+
+
+        val getApi = MyApplication.retrofit.create(NewsApi::class.java)
+        val repository = Repository(getApi)
+        viewModel = ViewModelProvider(this, MyViewModelFactory(repository))[MyViewModel::class.java]
+
+
+        with(binding) {
             trendingNews("All")
             all.setTextColor(Color.WHITE)
             all.setBackgroundResource(R.drawable.trending_background)
@@ -97,7 +107,7 @@ class MainActivity : AppCompatActivity() {
                 movie.setTextColor(Color.BLACK)
                 politics.setTextColor(Color.BLACK)
                 ipl.setTextColor(Color.BLACK)
-               india.setTextColor(Color.WHITE)
+                india.setTextColor(Color.WHITE)
                 trendingNews(india.text.toString())
                 india.setBackgroundResource(R.drawable.trending_background)
                 sports.setBackgroundResource(R.drawable.search_main)
@@ -122,38 +132,33 @@ class MainActivity : AppCompatActivity() {
                 all.setBackgroundResource(R.drawable.search_main)
             }
 
-            search.setOnClickListener{
-                val intent= Intent(this@MainActivity,SearchActivity::class.java)
+            search.setOnClickListener {
+                val intent = Intent(this@MainActivity, SearchActivity::class.java)
                 startActivity(intent)
 
             }
         }
     }
-    private fun trendingNews(searchType:String) {
-        newslist1=ArrayList()
-        val retrofit= Retrofit.Builder().baseUrl("https://newsapi.org/").addConverterFactory(
-            GsonConverterFactory.create()).build()
-        val getApi=retrofit.create(NewsApi::class.java)
+
+    private fun trendingNews(searchType: String) {
+        newslist1 = ArrayList()
+
+
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR, -1)
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val previousDay = dateFormat.format(calendar.time)
 
-        getApi.getNews(searchType, previousDay,"5bc8f27a8cd74ccbbf7a5d678cb7b9cd").enqueue(object :
-            Callback<News?> {
-            override fun onResponse(call: Call<News?>, response: Response<News?>) {
-                newslist1= response.body()?.articles !!
-                adapter= MyAdapter(this@MainActivity,this@MainActivity,newslist1)
+        viewModel.getNews(searchType, previousDay, "5bc8f27a8cd74ccbbf7a5d678cb7b9cd")
+            .observe(this) {
+                newslist1= it.articles
+                adapter= MyAdapter(this@MainActivity ,this@MainActivity ,newslist1)
                 binding.recyclerView.adapter=adapter
-                binding.recyclerView.layoutManager= LinearLayoutManager(this@MainActivity
-                )
+                binding.recyclerView.layoutManager= LinearLayoutManager(this@MainActivity)
             }
-
-            override fun onFailure(call: Call<News?>, t: Throwable) {
-                Toast.makeText(this@MainActivity, "something went wrong", Toast.LENGTH_SHORT).show()
-            }
-        })
 
     }
+
+
 
 }
